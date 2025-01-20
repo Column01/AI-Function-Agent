@@ -1,28 +1,8 @@
+import glob
 import json
-
+import os
+from importlib import util
 from typing import Callable
-
-
-# Define a simple function
-def say_hello(name: str, message: str = None) -> str:
-    if message:
-        print(message)
-        return message
-    else:
-        print(f"Hello, {name}!")
-        return f"Hello, {name}!"
-
-
-# Define a simple function
-def ask_age(name: str) -> str:
-    return input(f"How old are you, {name}?: ")
-
-
-# Library of the usable functions
-function_library = {
-    "say_hello": say_hello,
-    "ask_age": ask_age
-}
 
 
 def confirm_input(prompt: str = "Confirm? (y/n): ") -> bool:
@@ -30,38 +10,30 @@ def confirm_input(prompt: str = "Confirm? (y/n): ") -> bool:
     return test.lower() == "y"
 
 
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "say_hello",
-            "description": "Says hello to someone, the returned value is the message that was sent. Alternatively sends a custom message to someone when one is specified",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "description": "The person's name"},
-                    "message": {"type": "string", "description": "A custom message to send to the person"}
-                },
-                "required": ["name"],
-            },
-        },
-    },
+def glob_import(glob_str: str):
+    function_spec: list = []
+    functions: dict = {}
+    gui_file_paths = glob.glob(glob_str)
 
-    {
-        "type": "function",
-        "function": {
-            "name": "ask_age",
-            "description": "Ask someone their age",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "description": "The person's name."}
-                },
-                "required": ["name"],
-            },
-        },
-    }
-]
+    for file_path in gui_file_paths:
+        module_name = os.path.splitext(os.path.basename(file_path))[0]
+        spec = util.spec_from_file_location(module_name, file_path)
+        module = util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if getattr(module, "function"):
+            fn = getattr(module, "function")
+            fn_name = fn.__name__
+            functions[fn_name] = fn
+        if getattr(module, "function_spec"):
+            function_spec.append(getattr(module, "function_spec"))
+
+    return functions, function_spec
+
+
+func_specs = []
+
+# Import all functions and obtain their defined specs
+function_library, TOOLS = glob_import("functions/*.py")
 
 # For Qwen-Agent library, extracts actual functions from the tools
 functions = [tool["function"] for tool in TOOLS]
@@ -90,17 +62,15 @@ def execute_functions(responses: list) -> list:
     for response in responses:
         fn_call = response.get("function_call", None)
         if fn_call:
-            fn_name = fn_call['name']
+            fn_name = fn_call["name"]
             fn_args = json.loads(fn_call["arguments"])
             fnc = get_actual_function(fn_name)
             if fnc:
                 fn_res = fnc(**fn_args)
 
                 if fn_res:
-                    messages.append({
-                        "role": "function",
-                        "name": fn_name,
-                        "content": fn_res
-                    })
+                    messages.append(
+                        {"role": "function", "name": fn_name, "content": fn_res}
+                    )
     print("\n")
     return messages
