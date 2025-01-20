@@ -34,20 +34,24 @@ def main():
     ):
         pass
 
+    # Add AI function calls requests to context
+    messages.extend(responses)
+
     # Print all function calls the model is requesting
     funcs.print_func_calls(responses)
     # Ask for confirmation before running any functions
     if funcs.confirm_input():
-        # Add function calls to context
-        messages.extend(responses)
         # Execute functions and add their responses to the context
         func_responses = funcs.execute_functions(responses)
         messages.extend(func_responses)
-        # Get the AI's final response after tool calls and print it
-        for responses in llm.chat(messages=messages, functions=funcs.functions):
-            pass
-        messages.extend(responses)
-        print(messages[-1]["content"])
+    else:
+        messages.append({"role": "user", "content": "The user denied access to your tool call. Try to complete the task without tools if you can"})
+
+    # Get the AI's final response after tool calls and print it
+    for responses in llm.chat(messages=messages, functions=funcs.functions):
+        pass
+    messages.extend(responses)
+    print(messages[-1]["content"])
 
 
 if __name__ == "__main__":
