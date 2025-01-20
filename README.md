@@ -75,7 +75,7 @@ The current temperature in Ottawa is -16.6°C and the wind speed is 12.5 meters 
 
 ### Searching the internet
 
-Here is an example of asking the model to search the internet for information about the new Nvidia GPU DLSS 4 and frame generation:
+Here is an example of asking the model to search the internet for information about the new Nvidia DLSS 4 frame generation:
 
 ```md
 Prompt: Can you search for info about the DLSS 4 and the new frame generation from nvidia? Do two separate searches for both  
