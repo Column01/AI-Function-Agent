@@ -72,5 +72,4 @@ def execute_functions(responses: list) -> list:
                     messages.append(
                         {"role": "function", "name": fn_name, "content": fn_res}
                     )
-    print("\n")
     return messages
