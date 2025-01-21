@@ -1,16 +1,98 @@
+import glob
+import json
+import os
 from datetime import datetime
+from importlib import util
+from typing import Callable, Tuple, List, Dict
 
 from qwen_agent.llm import get_chat_model
 
-import functions as funcs
+
+def confirm_input(prompt: str = "Confirm? (y/n): ") -> bool:
+    test = input(prompt)
+    return test.lower() == "y"
+
+
+def glob_import(glob_str: str) -> Tuple[List[dict], Dict]:
+    function_spec: list = []
+    functions: dict = {}
+    gui_file_paths = glob.glob(glob_str)
+
+    for file_path in gui_file_paths:
+        module_name = os.path.splitext(os.path.basename(file_path))[0]
+        spec = util.spec_from_file_location(module_name, file_path)
+        module = util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if getattr(module, "function"):
+            fn = getattr(module, "function")
+            fn_name = fn.__name__
+            functions[fn_name] = fn
+        if getattr(module, "function_spec"):
+            function_spec.append(getattr(module, "function_spec"))
+
+    return functions, function_spec
+
+
+# Import all system and user functions, and merge their libraries
+system_function_library, TOOLS = glob_import("functions/system/*.py")
+user_function_library, USER_TOOLS = glob_import("functions/user/*.py")
+function_library = system_function_library | user_function_library
+
+# For Qwen-Agent library, extracts actual functions from the tools dicts
+functions = [tool["function"] for tool in TOOLS]
+user_functions = [tool["function"] for tool in USER_TOOLS]
+functions.extend(user_functions)
+
+
+def print_func_calls(responses: list):
+    print("\nFunctions to call (invalid functions will be ignored!): ")
+    functions = function_library.keys()
+    for response in responses:
+        fn_call = response.get("function_call", None)
+        if fn_call:
+            name = fn_call["name"]
+            print(f"\n{name}")
+            print(f"    Args: {fn_call["arguments"]}")
+            print(f"    Valid: {("Y" if name in functions else "N")}")
+    print("\n")
+
+
+def has_func_calls(responses: list) -> bool:
+    calls = [response for response in responses if response.get("function_call")]
+    return len(calls) > 0
+
+
+def get_actual_function(func_name: str) -> Callable | None:
+    return function_library.get(func_name)
+
+
+def execute_functions(responses: list) -> list:
+    messages = []
+    print("Executing functions...\n")
+    for response in responses:
+        fn_call = response.get("function_call", None)
+        if fn_call:
+            fn_name = fn_call["name"]
+            fn_args = json.loads(fn_call["arguments"])
+            fnc = get_actual_function(fn_name)
+            if fnc:
+                fn_res = fnc(**fn_args)
+
+                if fn_res:
+                    messages.append(
+                        {"role": "function", "name": fn_name, "content": fn_res}
+                    )
+    return messages
 
 
 def main():
-    llm = get_chat_model({
-        "model": "Qwen",
-        "model_server": "http://localhost:8080/v1",
-        "api_key": "EMPTY"
-    })
+    llm = get_chat_model(
+        {
+            "model": "Qwen",
+            "model_server": "http://localhost:8080/v1",
+            "api_key": "EMPTY",
+        }
+    )
 
     # Ask for the prompt
     prompt = input("Prompt: ")
@@ -19,39 +101,54 @@ def main():
         prompt = "Can you say hello to Bob the Builder? Ask bob how old he is and let me know."
 
     messages = [
-        {"role": "system", "content": f"You are JARVIS, a helpful and witty assistant. You help users with their tasks by using any of the functions available to you and your replies should always aim to be short but informative. The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}"},
-        {"role": "user", "content": prompt}
+        {
+            "role": "system",
+            "content": f"You are JARVIS, a helpful and witty assistant. You help users with their tasks by using any of the functions available to you and your replies should always aim to be short but informative. The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}",
+        },
+        {"role": "user", "content": prompt},
     ]
 
     print("Prompting the backend for function calls...")
     print(messages[1]["content"])
 
-    # Do initial inference to le the AI select function calls
-    for responses in llm.chat(
-        messages=messages,
-        functions=funcs.functions,
-        extra_generate_cfg=dict(parallel_function_calls=True)
-    ):
-        pass
+    finished = False
 
-    # Add AI function calls requests to context
-    messages.extend(responses)
+    while not finished:
+        # Do initial inference to le the AI select function calls
+        for responses in llm.chat(
+            messages=messages,
+            functions=functions,
+            extra_generate_cfg=dict(parallel_function_calls=True),
+        ):
+            pass
 
-    # Print all function calls the model is requesting
-    funcs.print_func_calls(responses)
-    # Ask for confirmation before running any functions
-    if funcs.confirm_input():
-        # Execute functions and add their responses to the context
-        func_responses = funcs.execute_functions(responses)
-        messages.extend(func_responses)
-    else:
-        messages.append({"role": "user", "content": "The user denied access to your tool call. Try to complete the task without tools if you can"})
+        # Add AI response/function call requests to context
+        messages.extend(responses)
 
-    # Get the AI's final response after tool calls and print it
-    for responses in llm.chat(messages=messages, functions=funcs.functions):
-        pass
-    messages.extend(responses)
-    print(messages[-1]["content"])
+        # If there are no function calls, this will break the loop after turn
+        if not has_func_calls(responses):
+            finished = True
+        else:
+            # Print all function calls the model is requesting
+            print_func_calls(responses)
+            # Ask for confirmation before running any functions
+            if confirm_input():
+                # Execute functions and add their responses to the context
+                func_responses = execute_functions(responses)
+                messages.extend(func_responses)
+            else:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "The user denied access to your tool call. Try to complete the task without tools if you can",
+                    }
+                )
+
+            # Get the AI's response after tool calls and print it
+            for responses in llm.chat(messages=messages, functions=functions):
+                pass
+            messages.extend(responses)
+            print(messages[-1]["content"])
 
 
 if __name__ == "__main__":
