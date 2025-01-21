@@ -114,7 +114,7 @@ def main():
     finished = False
 
     while not finished:
-        # Do initial inference to le the AI select function calls
+        # Do initial inference to let the AI select function calls
         for responses in llm.chat(
             messages=messages,
             functions=functions,
@@ -125,9 +125,10 @@ def main():
         # Add AI response/function call requests to context
         messages.extend(responses)
 
-        # If there are no function calls, this will break the loop after turn
+        # If there are no function calls, this will break the loop after this conversation turn
         if not has_func_calls(responses):
             finished = True
+            print(messages[-1]["content"])
         else:
             # Print all function calls the model is requesting
             print_func_calls(responses)
