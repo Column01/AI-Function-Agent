@@ -143,7 +143,7 @@ def main():
                 # If there are no function calls, this will break the loop after this conversation turn
                 if not has_func_calls(responses):
                     finished = True
-                    print(messages[-1]["content"])
+                    # print(messages[-1]["content"])
                 else:
                     # Print all function calls the model is requesting
                     print_func_calls(responses)

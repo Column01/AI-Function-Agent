@@ -63,7 +63,7 @@ if os.path.isfile("memory/metadata.json"):
         metadata = json.load(fp)
 
 
-def index_file(path, auto_save=True, onload_model=True):
+def index_file(path, auto_save=True, onload_model=True) -> str:
     global i
 
     if onload_model:
@@ -100,6 +100,8 @@ def index_file(path, auto_save=True, onload_model=True):
 
     # if onload_model:
     #     offload()
+
+    return new_path
 
 
 def index_memory():
@@ -148,6 +150,7 @@ def find_document(queries, n_docs=1, onload_model=True):
 
 
 def recall_memory(query: str, n_docs: int = 1) -> str:
+    print(f"Retrieving documents from memory with query: {query}")
     matches = find_document([query])
     if matches:
         documents = []
@@ -158,19 +161,20 @@ def recall_memory(query: str, n_docs: int = 1) -> str:
                     with open(path, "r") as fp:
                         file_data = fp.read()
                         documents.append(file_data)
-        print(documents)
         return json.dumps(documents, indent=2)
 
 
 def create_memory(memory_text: str) -> str:
     # Create a new text file in the '/memory' subdirectory with the memory_text
-    new_file_path = os.path.join("memory", f"memory_{int(time.time())}.txt")
-    with open(new_file_path, "w") as fp:
+    file_path = os.path.join("memory", f"memory_{int(time.time())}.txt")
+    print(f"Creating new memory...")
+    with open(file_path, "w") as fp:
         fp.write(memory_text)
 
     # Index the newly created file
-    index_file(new_file_path, auto_save=True, onload_model=True)
-    return f"New memory file created at: {new_file_path}"
+    new_path = index_file(file_path, auto_save=True, onload_model=True)
+    print(f"Created new memory and indexed to: {new_path}")
+    return f"New memory file created and indexed at: {new_path}"
 
 
 function = [create_memory, recall_memory]
