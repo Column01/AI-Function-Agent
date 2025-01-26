@@ -25,10 +25,19 @@ def glob_import(glob_str: str) -> Tuple[List[dict], Dict]:
         spec.loader.exec_module(module)
         if getattr(module, "function"):
             fn = getattr(module, "function")
-            fn_name = fn.__name__
-            functions[fn_name] = fn
+            if isinstance(fn, list):
+                for fnc in fn:
+                    fn_name = fnc.__name__
+                    functions[fn_name] = fnc
+            else:
+                fn_name = fn.__name__
+                functions[fn_name] = fn
         if getattr(module, "function_spec"):
-            function_spec.append(getattr(module, "function_spec"))
+            func_spec = getattr(module, "function_spec")
+            if isinstance(func_spec, list):
+                function_spec.extend(func_spec)
+            else:
+                function_spec.append(func_spec)
 
     return functions, function_spec
 
@@ -94,62 +103,71 @@ def main():
         }
     )
 
-    # Ask for the prompt
-    prompt = input("Prompt: ")
-    # If no prompt is provided, use this default prompt (mostly for testing purposes)
-    if not prompt:
-        prompt = "Can you say hello to Bob the Builder? Ask bob how old he is and let me know."
-
     messages = [
         {
             "role": "system",
             "content": f"You are JARVIS, a helpful and witty assistant. You help users with their tasks by using any of the functions available to you and your replies should always aim to be short but informative. The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}",
-        },
-        {"role": "user", "content": prompt},
+        }
     ]
 
-    print("Prompting the backend for function calls...")
-    print(messages[1]["content"])
+    running = True
+    while running:
+        try:
+            # Ask for the prompt
+            prompt = input("Prompt: ")
+            # If no prompt is provided, skip this loop and ask for a new one
+            if not prompt:
+                print("You have to say something for this to work...")
+                continue
 
-    finished = False
+            # Add the prompt to the context
+            messages.append({"role": "user", "content": prompt})
 
-    while not finished:
-        # Do initial inference to let the AI select function calls
-        for responses in llm.chat(
-            messages=messages,
-            functions=functions,
-            extra_generate_cfg=dict(parallel_function_calls=True),
-        ):
-            pass
+            print("Prompting the backend for function calls...")
+            #print(messages[1]["content"])
 
-        # Add AI response/function call requests to context
-        messages.extend(responses)
+            finished = False
 
-        # If there are no function calls, this will break the loop after this conversation turn
-        if not has_func_calls(responses):
-            finished = True
-            print(messages[-1]["content"])
-        else:
-            # Print all function calls the model is requesting
-            print_func_calls(responses)
-            # Ask for confirmation before running any functions
-            if confirm_input():
-                # Execute functions and add their responses to the context
-                func_responses = execute_functions(responses)
-                messages.extend(func_responses)
-            else:
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": "The user denied access to your tool call. Try to complete the task without tools if you can",
-                    }
-                )
+            while not finished:
+                # Do initial inference to let the AI select function calls
+                for responses in llm.chat(
+                    messages=messages,
+                    functions=functions,
+                    extra_generate_cfg=dict(parallel_function_calls=True),
+                ):
+                    pass
 
-            # Get the AI's response after tool calls and print it
-            for responses in llm.chat(messages=messages, functions=functions):
-                pass
-            messages.extend(responses)
-            print(messages[-1]["content"])
+                # Add AI response/function call requests to context
+                messages.extend(responses)
+
+                # If there are no function calls, this will break the loop after this conversation turn
+                if not has_func_calls(responses):
+                    finished = True
+                    print(messages[-1]["content"])
+                else:
+                    # Print all function calls the model is requesting
+                    print_func_calls(responses)
+                    # Ask for confirmation before running any functions
+                    if confirm_input():
+                        # Execute functions and add their responses to the context
+                        func_responses = execute_functions(responses)
+                        messages.extend(func_responses)
+                    else:
+                        messages.append(
+                            {
+                                "role": "user",
+                                "content": "The user denied access to your tool call. Try to complete the task without tools if you can",
+                            }
+                        )
+
+                    # Get the AI's response after tool calls and print it
+                    for responses in llm.chat(messages=messages, functions=functions):
+                        pass
+                    messages.extend(responses)
+                    print(messages[-1]["content"])
+        except KeyboardInterrupt:
+            running = False
+            exit("Exiting...")
 
 
 if __name__ == "__main__":

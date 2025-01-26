@@ -4,12 +4,27 @@ A simple script using Qwen-Agent to access a locally running model for function/
 
 ## Setup
 
+### Pre-Requisites
+
+- Download this repo
 - Install Python 3.11+
-- Install requirements: `pip install -r requirements.txt` (use a venv if you can)
+- **Recommended:**
+    - Create a python virtual environment (on linux, use `python3`):
+    - `python -m venv aiAgentVenv`
+    - Once created, it can be activated with:
+    - `./venv/Scripts/activate`
+    - All future installed modules will no longer overwrite your system packages!
+
+### Modules
+
+Installing modules in the correct order helps make sure everything installs with proper support for acceleration when applicable.
+
+1. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
+2. `pip install duckduckgo-search qwen-agent transformers usearch`
 
 ## Usage
 
-Run the script to prompt the model for function calling
+Run the script to prompt the model for function calling (assuming you activated the venv!)
 
 `python tool_calling.py`
 
