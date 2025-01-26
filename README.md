@@ -8,12 +8,19 @@ A simple script using Qwen-Agent to access a locally running model for function/
 
 - Download this repo
 - Install Python 3.11+
+- Select a model that has function calling capability (testing is done using a quant of `Qwen2.5-14B-Instruct` from [bartowski](https://huggingface.co/bartowski))
+- We recommend using [llamma.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). 
+    - The code expects an OpenAI API at `http://localhost:8080`, this will be configurable soon ish once more code is written for this.
+    - Once you download the correct version for your OS and hardware, you'll wanna make some sort of shell script to run your main LLM for tooling.
+    - Example command (~11GB VRAM usage on an RTX 3060): `llama-server.exe -m "bartowski\Qwen2.5-14B-Instruct-GGUF\Qwen2.5-14B-Instruct-Q4_K_L.gguf" -ngl 128 -fa -c 8192 -ctk "q4_0" -ctv "q4_0"`
+    - If you do not want to use this backend, you'll have to modify the main tooling script to use your favored backend (subject to change!)
 - **Recommended:**
     - Create a python virtual environment (on linux, use `python3`):
-    - `python -m venv aiAgentVenv`
+        - `python -m venv aiAgentVenv`
     - Once created, it can be activated with:
-    - `./venv/Scripts/activate`
+        - `./aiAgentVenv/Scripts/activate`
     - All future installed modules will no longer overwrite your system packages!
+
 
 ### Modules
 
