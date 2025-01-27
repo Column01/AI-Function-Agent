@@ -1,4 +1,5 @@
 import glob
+import inspect
 import json
 import os
 from datetime import datetime
@@ -53,16 +54,50 @@ user_functions = [tool["function"] for tool in USER_TOOLS]
 functions.extend(user_functions)
 
 
+def print_assistant_messages(responses: list):
+    printable = [resp["content"] for resp in responses if resp["role"] == "assistant" and resp["content"] != ""]
+    print("\n".join(printable))
+
+
+def is_valid_func_call(fn_name: str, fn_args: dict) -> bool:
+    # Checks if the function exists
+    fnc = get_actual_function(fn_name)
+    if not fnc:
+        return False
+    params = inspect.signature(fnc).parameters
+    fnc_args = params.keys()
+    model_args = fn_args.keys()
+
+    # Check for extra arguments we aren't expecting
+    extra = [arg for arg in model_args if arg not in fnc_args]
+    if len(extra) != 0:
+        return False
+    
+    # See if any arguments are missing
+    missing = fnc_args - model_args
+    # No args are missing
+    if len(missing) == 0:
+        # Check that the keys match
+        return list(params.keys()) == list(fn_args.keys())
+    # Check if the "missing" parameters have no default value
+    for key in missing:
+        param = params.get(key)
+        if param.default == inspect.Parameter.empty:
+            return False
+    return True
+
+
 def print_func_calls(responses: list):
     print("\nFunctions to call (invalid functions will be ignored!): ")
-    functions = function_library.keys()
+    
     for response in responses:
         fn_call = response.get("function_call", None)
         if fn_call:
             name = fn_call["name"]
+            args = json.loads(fn_call["arguments"])
             print(f"\n{name}")
-            print(f"    Args: {fn_call["arguments"]}")
-            print(f"    Valid: {("Y" if name in functions else "N")}")
+            print(f"    Args: {args}")
+            print(f"    Valid: {("Y" if is_valid_func_call(name, args) else "N")}")
     print("\n")
 
 
@@ -85,12 +120,14 @@ def execute_functions(responses: list) -> list:
             fn_args = json.loads(fn_call["arguments"])
             fnc = get_actual_function(fn_name)
             if fnc:
-                fn_res = fnc(**fn_args)
-
-                if fn_res:
-                    messages.append(
-                        {"role": "function", "name": fn_name, "content": fn_res}
-                    )
+                if is_valid_func_call(fn_name, fn_args):
+                    fn_res = fnc(**fn_args)
+                    if fn_res:
+                        messages.append(
+                            {"role": "function", "name": fn_name, "content": fn_res}
+                        )
+                else:
+                    messages.append({"role": "function", "name": fn_name, "content": "This function either does not exist, or the parameters provided were invalid."})
     return messages
 
 
@@ -124,7 +161,6 @@ def main():
             messages.append({"role": "user", "content": prompt})
 
             print("Prompting the backend for function calls...")
-            #print(messages[1]["content"])
 
             finished = False
 
@@ -139,33 +175,19 @@ def main():
 
                 # Add AI response/function call requests to context
                 messages.extend(responses)
-
+                print_assistant_messages(responses)
                 # If there are no function calls, this will break the loop after this conversation turn
                 if not has_func_calls(responses):
                     finished = True
-                    # print(messages[-1]["content"])
                 else:
                     # Print all function calls the model is requesting
                     print_func_calls(responses)
-                    # Ask for confirmation before running any functions
-                    if confirm_input():
-                        # Execute functions and add their responses to the context
-                        func_responses = execute_functions(responses)
-                        messages.extend(func_responses)
-                    else:
-                        messages.append(
-                            {
-                                "role": "user",
-                                "content": "The user denied access to your tool call. Try to complete the task without tools if you can",
-                            }
-                        )
+                    # Execute functions and add their responses to the context
+                    func_responses = execute_functions(responses)
+                    messages.extend(func_responses)
 
-                    # Get the AI's response after tool calls and print it
-                    for responses in llm.chat(messages=messages, functions=functions):
-                        pass
-                    messages.extend(responses)
-                    print(messages[-1]["content"])
         except KeyboardInterrupt:
+            # print(json.dumps(messages, indent=2))
             running = False
             exit("Exiting...")
 
