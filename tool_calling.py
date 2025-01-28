@@ -132,11 +132,15 @@ def execute_functions(responses: list) -> list:
 
 
 def main():
+    with open("config.json", "r") as fp:
+        config = json.load(fp)
+    
+
     llm = get_chat_model(
         {
-            "model": "Qwen",
-            "model_server": "http://localhost:8080/v1",
-            "api_key": "EMPTY",
+            "model": config["model_name"],
+            "model_server": config["api_url"],
+            "api_key": config["api_key"],
         }
     )
 
