@@ -151,7 +151,7 @@ def find_document(queries, n_docs=1, onload_model=True):
 
 def recall_memory(query: str, n_docs: int = 1) -> str:
     print(f"Retrieving documents from memory with query: {query}")
-    matches = find_document([query])
+    matches = find_document([query], n_docs=n_docs)
     if matches:
         documents = []
         for _matches in matches:
@@ -200,7 +200,7 @@ function_spec = [
         "type": "function",
         "function": {
             "name": "recall_memory",
-            "description": "Called when the user requests you to recall a memory based on a query. The user can optionally request a number of documents to be returned.",
+            "description": "Called when you want to recall a memory based on a query. Can be used to find information stored locally about the user.",
             "parameters": {
                 "type": "object",
                 "properties": {

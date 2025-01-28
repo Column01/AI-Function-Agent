@@ -55,7 +55,11 @@ functions.extend(user_functions)
 
 
 def print_assistant_messages(responses: list):
-    printable = [resp["content"] for resp in responses if resp["role"] == "assistant" and resp["content"] != ""]
+    printable = [
+        resp["content"]
+        for resp in responses
+        if resp["role"] == "assistant" and resp["content"] != ""
+    ]
     print("\n".join(printable))
 
 
@@ -72,7 +76,7 @@ def is_valid_func_call(fn_name: str, fn_args: dict) -> bool:
     extra = [arg for arg in model_args if arg not in fnc_args]
     if len(extra) != 0:
         return False
-    
+
     # See if any arguments are missing
     missing = fnc_args - model_args
     # No args are missing
@@ -89,7 +93,7 @@ def is_valid_func_call(fn_name: str, fn_args: dict) -> bool:
 
 def print_func_calls(responses: list):
     print("\nFunctions to call (invalid functions will be ignored!): ")
-    
+
     for response in responses:
         fn_call = response.get("function_call", None)
         if fn_call:
@@ -127,14 +131,19 @@ def execute_functions(responses: list) -> list:
                             {"role": "function", "name": fn_name, "content": fn_res}
                         )
                 else:
-                    messages.append({"role": "function", "name": fn_name, "content": "This function either does not exist, or the parameters provided were invalid."})
+                    messages.append(
+                        {
+                            "role": "function",
+                            "name": fn_name,
+                            "content": "This function either does not exist, or the parameters provided were invalid.",
+                        }
+                    )
     return messages
 
 
 def main():
     with open("config.json", "r") as fp:
         config = json.load(fp)
-    
 
     llm = get_chat_model(
         {
@@ -147,7 +156,13 @@ def main():
     messages = [
         {
             "role": "system",
-            "content": f"You are JARVIS, a helpful and witty assistant. You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative. The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}",
+            "content": f"""You are JARVIS, a helpful and witty assistant. 
+            You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
+            When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
+            You can remember details about the user using your tools.
+            If you cannot answer a prompt based on information you have available, use your tools to find more information. 
+            The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
+            """,
         }
     ]
 
