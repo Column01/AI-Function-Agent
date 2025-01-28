@@ -136,3 +136,52 @@ For more detailed information, you can check out these sources:
 - [NVIDIA DLSS 4 Introduces Multi Frame Generation & Enhancements For All](https://www.nvidia.com/en-us/geforce/news/dlss4-multi-frame-generation-ai-innovations/)
 - [NVIDIA DLSS 4 Introduces Multi Frame Generation & Enhancements For All...](https://www.nvidia.com/en-us/geforce/news/dlss4-multi-frame-generation-ray-tracing-rtx-games/)
 ```
+
+### Memory
+
+The model is equipped with tooling to remember text for you, and recall it based on a query. Due to the simplistic nature of the models, anything you ask it to remember or recall should be relatively explicit. If you said "remember I like apples" it would probably choose to remember, literally, "I like apples". This is a limitation of the model's understanding of roles
+
+
+Here is an example asking it to remember my apple preference. **Notice how I was explicit with what I wanted it to remember**
+
+```md
+Prompt: Can you remember something for me? Remember: "The user prefers gala apples"        
+Prompting the backend for function calls...
+
+
+Functions to call (invalid functions will be ignored!):  
+
+create_memory
+    Args: {'memory_text': 'The user prefers gala apples'}
+    Valid: Y
+
+
+Executing functions...
+
+Creating new memory...
+Onloading text embedding model to GPU...
+Created new memory and indexed to: memory\index\memory_1738100862.txt
+I've remembered that the user prefers gala apples. Is there something else you'd like me to remember?
+```
+
+Here is another example, except this time is an entirely fresh run, and I'm now asking it to remember what apples I prefer
+
+
+```md
+Prompt: Can you remember what type of apples I prefer?
+Prompting the backend for function calls...
+
+
+Functions to call (invalid functions will be ignored!): 
+
+recall_memory
+    Args: {'query': 'apple preference'}
+    Valid: Y
+
+
+Executing functions...
+
+Retrieving documents from memory with query: apple preference
+Onloading text embedding model to GPU...
+You prefer gala apples.
+```
