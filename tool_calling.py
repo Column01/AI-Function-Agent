@@ -147,7 +147,7 @@ def main():
     messages = [
         {
             "role": "system",
-            "content": f"You are JARVIS, a helpful and witty assistant. You help users with their tasks by using any of the functions available to you and your replies should always aim to be short but informative. The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}",
+            "content": f"You are JARVIS, a helpful and witty assistant. You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative. The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}",
         }
     ]
 

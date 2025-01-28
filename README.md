@@ -9,17 +9,13 @@ A simple script using Qwen-Agent to access a locally running model for function/
 - Download this repo
 - Install Python 3.11+
 - Select a model that has function calling capability (testing is done using a quant of `Qwen2.5-14B-Instruct` from [bartowski](https://huggingface.co/bartowski))
-- We recommend using [llamma.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). 
-    - The code expects an OpenAI API at `http://localhost:8080`, this will be configurable soon ish once more code is written for this.
-    - Once you download the correct version for your OS and hardware, you'll wanna make some sort of shell script to run your main LLM for tooling.
-    - Example command (~11GB VRAM usage on an RTX 3060): `llama-server.exe -m "bartowski\Qwen2.5-14B-Instruct-GGUF\Qwen2.5-14B-Instruct-Q4_K_L.gguf" -ngl 128 -fa -c 8192 -ctk "q4_0" -ctv "q4_0"`
-    - If you do not want to use this backend, you'll have to modify the main tooling script to use your favored backend (subject to change!)
-- **Recommended:**
+- The code expects a hosted (local or remote) model running with a OpenAI API compatable server
+- **Other Recommendations:**
     - Create a python virtual environment (on linux, use `python3`):
         - `python -m venv aiAgentVenv`
     - Once created, it can be activated with:
         - `./aiAgentVenv/Scripts/activate`
-    - All future installed modules will no longer overwrite your system packages!
+    - If you want to run the main LLM locally, we recommend using [llamma.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). 
 
 
 ### Modules
@@ -30,6 +26,14 @@ Installing modules in the correct order helps make sure everything installs with
 2. `pip install duckduckgo-search qwen-agent transformers usearch`
 
 ## Usage
+
+### Backend Configuration
+
+You'll need to open and edit the [config.json](/config.json) file locally to have the correct URL and API key for your tool calling model. This can be a locally hosted model, or a remote model so long as the backend uses an OpenAI API compatable server.
+
+As stated above, for local use we recommend using [llamma.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
+
+### Running the Script
 
 Run the script to prompt the model for function calling (assuming you activated the venv!)
 
