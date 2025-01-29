@@ -159,8 +159,7 @@ def main():
             "content": f"""You are JARVIS, a helpful and witty assistant. 
             You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
             When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
-            You can remember details about the user using your tools.
-            If you cannot answer a prompt based on information you have available, use your tools to find more information. 
+            If you cannot answer a prompt based on information you have available, use your tools to find more information.
             The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
             """,
         }
@@ -182,7 +181,6 @@ def main():
             print("Prompting the backend for function calls...")
 
             finished = False
-
             while not finished:
                 # Do initial inference to let the AI select function calls
                 for responses in llm.chat(

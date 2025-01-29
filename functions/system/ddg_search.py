@@ -9,7 +9,7 @@ except ImportError:
     print("No module named 'duckduckgo_search' found")
 
 
-def ddg_search(query: str, results: int = 5) -> str:
+def ddg_search(query: str, results: int = 3) -> str:
     if searcher is not None:
         return json.dumps(searcher.text(query, max_results=results))
     else:
@@ -26,7 +26,7 @@ function_spec = {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "The search query to look for"},
-                "results": {"type": "int", "description": "The number of results to get, defaults to 5 results"}
+                "results": {"type": "int", "description": "The number of (max) results to get, defaults to 3 results"}
             },
             "required": ["query"],
         },

@@ -5,7 +5,6 @@ import time
 
 import torch
 import torch.nn.functional as F
-from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 from usearch.index import Index
 
@@ -183,7 +182,7 @@ function_spec = [
         "type": "function",
         "function": {
             "name": "create_memory",
-            "description": "Called when the user requests you to create a memory. Memories are simple text and storerd as text files in your 'brain' for lack of a better word.",
+            "description": "Called when the user requests you to create a memory. Memories are stored as text files.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -200,7 +199,7 @@ function_spec = [
         "type": "function",
         "function": {
             "name": "recall_memory",
-            "description": "Called when you want to recall a memory based on a query. Can be used to find information stored locally about the user.",
+            "description": "Called when you want to recall a memory based on a query. You can use this to remember details about the user and retrieve other documents in memory",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -210,7 +209,7 @@ function_spec = [
                     },
                     "n_docs": {
                         "type": "int",
-                        "description": "An optional amount for the number of memories to retrieve",
+                        "description": "An optional amount for the number of memories to retrieve, defaults to 1",
                     },
                 },
                 "required": ["query"],
