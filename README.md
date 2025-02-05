@@ -51,9 +51,9 @@ Pre-made tools exist and can be found in the [functions](/functions) folder of t
 
 ### Making your own tooling
 
-Custom tools can be created by placing a new function script in the `functions` folder of the project which can then be used by running the `tool_calling.py` script again
+Custom tools can be created by placing a new function script in the `functions/user/` folder of the project which can then be used by running the `tool_calling.py` script again. Once it starts, you can type `load` in the prompt to load your user functions (alternatively, the config can be changed to load them at startup)
 
-Below is a template you can use, the `function` and the `function_spec` variables MUST follow the [OpenAI tool/function format](https://platform.openai.com/docs/guides/function-calling) and are required for your function to be loaded and registered as usable with the model
+Below is a template you can use, the `function` variable must point to the function the LLM should use. The `function_spec` variable MUST follow the [OpenAI tool/function format](https://platform.openai.com/docs/guides/function-calling) and is required for your function to be loaded and registered as usable with the model.
 
 ```py
 def say_hello(name: str) -> str:
@@ -66,7 +66,7 @@ function_spec = {
     "type": "function",
     "function": {
         "name": "say_hello",
-        "description": "Says hello to someone, the returned value is the message that was sent. Alternatively sends a custom message to someone when one is specified",
+        "description": "Says hello to someone, the returned value is the message that was sent.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -143,8 +143,7 @@ For more detailed information, you can check out these sources:
 
 ### Memory
 
-The model is equipped with tooling to remember text for you, and recall it based on a query. Due to the simplistic nature of the models, anything you ask it to remember or recall should be relatively explicit. If you said "remember I like apples" it would probably choose to remember, literally, "I like apples". This is a limitation of the model's understanding of roles
-
+The model is equipped with tooling to remember text for you, and recall it based on a query. Due to the simplistic nature of the models, anything you ask it to remember or recall should be relatively explicit. If you said "remember I like apples" it could choose to remember, literally, "I like apples".
 
 Here is an example asking it to remember my apple preference. **Notice how I was explicit with what I wanted it to remember**
 
