@@ -43,18 +43,7 @@ After it has been run, it will ask for a prompt. Be descriptive for what you wan
 
 You can also use this for normal LLM chatting if you'd like.
 
-There are a few commands you can use in the prompt to do things:
-
-```
-help
-    Shows this text
-exit
-    Exits the program
-clear
-    Clears the console and the chat history for a new convo
-load
-    Load's the functions in the user folder. (can be enabled by default in the config)
-```
+There are a few commands you can use in the prompt, type `help` to list them all.
 
 ### Available tools
 

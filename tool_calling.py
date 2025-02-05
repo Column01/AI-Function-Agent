@@ -159,7 +159,7 @@ def execute_functions(responses: list) -> list:
 def print_help():
     print("help")
     print("    Shows this text")
-    print("exit")
+    print("exit (or quit)")
     print("    Exits the program")
     print("clear")
     print("    Clears the console and the chat history for a new convo")
@@ -212,7 +212,7 @@ def main():
             if prompt == "load":
                 load_user_funcs()
                 continue
-            if prompt == "exit":
+            if prompt in ("exit", "quit"):
                 exit("Exiting...")
 
             # Add the prompt to the context
