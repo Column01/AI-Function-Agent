@@ -43,15 +43,30 @@ def glob_import(glob_str: str) -> Tuple[List[dict], Dict]:
     return functions, function_spec
 
 
-# Import all system and user functions, and merge their libraries
+def load_user_funcs():
+    global system_function_library, function_library, functions
+    print("Loading user functions...")
+    user_function_library, USER_TOOLS = glob_import("functions/user/*.py")
+    # For Qwen-Agent library, extracts actual functions from the tools dicts
+    user_functions = [tool["function"] for tool in USER_TOOLS]
+    function_library = system_function_library | user_function_library
+    functions.extend(user_functions)
+    print("User functions loaded!")
+
+
+# Load the user's config file
+with open("config.json", "r") as fp:
+    config = json.load(fp)
+
+# Import all system functions
 system_function_library, TOOLS = glob_import("functions/system/*.py")
-user_function_library, USER_TOOLS = glob_import("functions/user/*.py")
-function_library = system_function_library | user_function_library
+function_library = system_function_library
 
 # For Qwen-Agent library, extracts actual functions from the tools dicts
 functions = [tool["function"] for tool in TOOLS]
-user_functions = [tool["function"] for tool in USER_TOOLS]
-functions.extend(user_functions)
+
+if config.get("load_user_funcs"):
+    load_user_funcs()
 
 
 def print_assistant_messages(responses: list):
@@ -141,10 +156,18 @@ def execute_functions(responses: list) -> list:
     return messages
 
 
-def main():
-    with open("config.json", "r") as fp:
-        config = json.load(fp)
+def print_help():
+    print("help")
+    print("    Shows this text")
+    print("exit")
+    print("    Exits the program")
+    print("clear")
+    print("    Clears the console and the chat history for a new convo")
+    print("load")
+    print("    Load's the functions in the user folder. (can be enabled by default in the config)")
 
+
+def main():
     llm = get_chat_model(
         {
             "model": config["model_name"],
@@ -153,18 +176,20 @@ def main():
         }
     )
 
-    messages = [
-        {
-            "role": "system",
-            "content": f"""You are JARVIS, a helpful and witty assistant. 
-            You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
-            When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
-            If you cannot answer a prompt based on information you have available, use your tools to find more information.
-            The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
-            """,
-        }
-    ]
+    system_message = {
+        "role": "system",
+        "content": f"""You are JARVIS, a helpful and witty assistant. 
+        You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
+        When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
+        If you cannot answer a prompt based on information you have available, use your tools to find more information.
+        The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
+        """,
+    }
 
+    print("Type 'help' for chat commands")
+
+    messages = []
+    messages.append(system_message)
     running = True
     while running:
         try:
@@ -174,6 +199,21 @@ def main():
             if not prompt:
                 print("You have to say something for this to work...")
                 continue
+
+            if prompt == "help":
+                print_help()
+                continue
+            if prompt == "clear":
+                # clears the chat history and terminal
+                messages.clear()
+                messages.append(system_message)
+                os.system("cls" if os.name == "nt" else "clear")
+                continue
+            if prompt == "load":
+                load_user_funcs()
+                continue
+            if prompt == "exit":
+                exit("Exiting...")
 
             # Add the prompt to the context
             messages.append({"role": "user", "content": prompt})
@@ -205,7 +245,6 @@ def main():
 
         except KeyboardInterrupt:
             # print(json.dumps(messages, indent=2))
-            running = False
             exit("Exiting...")
 
 

@@ -41,6 +41,21 @@ Run the script to prompt the model for function calling (assuming you activated 
 
 After it has been run, it will ask for a prompt. Be descriptive for what you want the model to do so it knows which tools to select, and what to do with any data it gets from the tools.
 
+You can also use this for normal LLM chatting if you'd like.
+
+There are a few commands you can use in the prompt to do things:
+
+```
+help
+    Shows this text
+exit
+    Exits the program
+clear
+    Clears the console and the chat history for a new convo
+load
+    Load's the functions in the user folder. (can be enabled by default in the config)
+```
+
 ### Available tools
 
 Pre-made tools exist and can be found in the [functions](/functions) folder of the repo
