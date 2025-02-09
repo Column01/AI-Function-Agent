@@ -1,19 +1,32 @@
 # AI Function Agent (WIP!)
 
-A simple script using Qwen-Agent to for LLM inference based python function calling
-
-- Chat with your own local or remote AI assistant that can run python code implicitly
+- Chat with your own local or remote AI assistant that can run custom python functions implicitly
 - Build an AI mediated automation ecosystem tailored to your workload
 - Generate images using the included image generation tool and the [Lumina-Image-2.0](https://huggingface.co/Alpha-VLLM/Lumina-Image-2.0) model!
 
+## Important Note
+
+Although the main function calling LLM can be remotely hosted, some of the included functions such as the Memory or the Image Generation require a reasonably powerful local system to use.
+
+Development is done with an Ryzen 5600X w/ 32GB of RAM and an RTX 3060 12GB. When generating images the Lumina 2 image model eats most of my resources (all my VRAM and a lot of RAM) generating 512x512 images
+
+If your system can't handle that, you should disable that function (change the [image generation script](functions/system/gen_image.py) file extensions to `.py.dis` or delete the file)
+
 ## Setup
+
+### Model Selection
+
+You're going to need find a model that has function calling capabilities. A good resource for selecting a model is the [Berkley Function-Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
+
+Development is done using a quant of `Qwen2.5-14B-Instruct` from [bartowski](https://huggingface.co/bartowski). This model has good function calling capabilities while also being great at general purpose chatting.
+
+Obviously going with a larger model with better capabilities is preferred as you get better chatting capabilities.
 
 ### Pre-Requisites
 
 - Download this repo
 - Install Python 3.11+
-- Select a model that has function calling capability (testing is done using a quant of `Qwen2.5-14B-Instruct` from [bartowski](https://huggingface.co/bartowski))
-- The code expects a hosted (local or remote) model running with a OpenAI API compatable server
+- The code expects a model run by a OpenAI API compatable server
 - **Other Recommendations:**
     - Create a python virtual environment (on linux, use `python3`):
         - `python -m venv aiAgentVenv`
