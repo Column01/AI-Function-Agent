@@ -1,6 +1,10 @@
-# AI Function Agent
+# AI Function Agent (WIP!)
 
-A simple script using Qwen-Agent to access a locally running model for function/tool calling.
+A simple script using Qwen-Agent to for LLM inference based python function calling
+
+- Chat with your own local or remote AI assistant that can run python code implicitly
+- Build an AI mediated automation ecosystem tailored to your workload
+- Generate images using the included image generation tool and the [Lumina-Image-2.0](https://huggingface.co/Alpha-VLLM/Lumina-Image-2.0) model!
 
 ## Setup
 
@@ -15,7 +19,7 @@ A simple script using Qwen-Agent to access a locally running model for function/
         - `python -m venv aiAgentVenv`
     - Once created, it can be activated with:
         - `./aiAgentVenv/Scripts/activate`
-    - If you want to run the main LLM locally, we recommend using [llamma.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). 
+    - If you want to run the main LLM locally, we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
 
 
 ### Modules
@@ -24,6 +28,7 @@ Installing modules in the correct order helps make sure everything installs with
 
 1. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
 2. `pip install duckduckgo-search qwen-agent transformers usearch`
+3. `pip install git+https://github.com/zhuole1025/diffusers.git@lumina2` (fork of diffusers with new lumina2 image pipeline)
 
 ## Usage
 
@@ -31,7 +36,7 @@ Installing modules in the correct order helps make sure everything installs with
 
 You'll need to open and edit the [config.json](/config.json) file locally to have the correct URL and API key for your tool calling model. This can be a locally hosted model, or a remote model so long as the backend uses an OpenAI API compatable server.
 
-As stated above, for local use we recommend using [llamma.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
+As stated above, for local use we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
 
 ### Running the Script
 
@@ -47,7 +52,7 @@ There are a few commands you can use in the prompt, type `help` to list them all
 
 ### Available tools
 
-Pre-made tools exist and can be found in the [functions](/functions) folder of the repo
+Pre-made tools exist and can be found in the [functions](/functions) folder of the repo.
 
 ### Making your own tooling
 

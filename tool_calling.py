@@ -164,7 +164,9 @@ def print_help():
     print("clear")
     print("    Clears the console and the chat history for a new convo")
     print("load")
-    print("    Load's the functions in the user folder. (can be enabled by default in the config)")
+    print(
+        "    Load's the functions in the user folder. (can be enabled by default in the config)"
+    )
 
 
 def main():
@@ -176,14 +178,17 @@ def main():
         }
     )
 
+    system_prompt = inspect.cleandoc(f"""
+                    You are JARVIS, a helpful and witty assistant. 
+                    You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
+                    When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
+                    If you cannot answer a prompt based on information you have available, use your tools to find more information.
+                    The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
+                    """)
+
     system_message = {
         "role": "system",
-        "content": f"""You are JARVIS, a helpful and witty assistant. 
-        You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
-        When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
-        If you cannot answer a prompt based on information you have available, use your tools to find more information.
-        The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
-        """,
+        "content": system_prompt,
     }
 
     print("Type 'help' for chat commands")
