@@ -16,11 +16,11 @@ If your system can't handle that, you should disable that function (change the [
 
 ### Model Selection
 
-You're going to need find a model that has function calling capabilities. A good resource for selecting a model is the [Berkley Function-Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
+You're going to need find a model that has function calling capabilities. A good resource for selecting a model is the [Berkeley Function-Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
 
-Development is done using a quant of `Qwen2.5-14B-Instruct` from [bartowski](https://huggingface.co/bartowski). This model has good function calling capabilities while also being great at general purpose chatting.
+Development is done using a quant of `Qwen2.5-14B-Instruct` from [bartowski](https://huggingface.co/bartowski). This model has good function-calling capabilities while also being great at general-purpose chatting.
 
-Obviously going with a larger model with better capabilities is preferred as you get better chatting capabilities.
+A larger model with better overall capabilities is preferred as you will get a better general chatting experience.
 
 ### Pre-Requisites
 
