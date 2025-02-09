@@ -10,7 +10,7 @@ Although the main function calling LLM can be remotely hosted, some of the inclu
 
 Development is done with an Ryzen 5600X w/ 32GB of RAM and an RTX 3060 12GB. When generating images the Lumina 2 image model eats most of my resources (all my VRAM and a lot of RAM) generating 512x512 images
 
-If your system can't handle that, you should disable that function (change the [image generation script](functions/system/gen_image.py) file extensions to `.py.dis` or delete the file)
+If your system can't handle that, you should disable that function (change the [image generation script](functions/system/image_gen.py) file extensions to `.py.dis` or delete the file)
 
 ## Setup
 
