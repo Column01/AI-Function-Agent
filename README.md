@@ -62,27 +62,27 @@ Custom tools can be created by placing a new function script in the `functions/u
 Below is a template you can use, the `function` variable must point to the function the LLM should use. The `function_spec` variable MUST follow the [OpenAI tool/function format](https://platform.openai.com/docs/guides/function-calling) and is required for your function to be loaded and registered as usable with the model.
 
 ```py
-def say_hello(name: str) -> str:
-    print(f"Hello, {name}!")
-    return f"Hello, {name}!"
+def print_message(message: str = None) -> str:
+    if message:
+        print(message)
+        return message
 
 
-function = say_hello
+function = print_message
 function_spec = {
     "type": "function",
     "function": {
-        "name": "say_hello",
-        "description": "Says hello to someone, the returned value is the message that was sent.",
+        "name": "print_message",
+        "description": "Print's a message into the dev console. Only use when requested to use.",
         "parameters": {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "The person's name"}
+                "message": {"type": "string", "description": "A message to print"}
             },
-            "required": ["name"],
+            "required": ["message"],
         },
     },
 }
-
 ```
 
 ## Examples
