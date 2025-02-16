@@ -113,7 +113,14 @@ def format_tool_message(tool_call: ChatCompletionMessageToolCall, fn_res: str) -
     resp = {"role": "tool", "name": tool_call.function.name, "content": fn_res}
     # Handle OpenAI tool calls
     if tool_call.id:
-        resp = {"role": "tool", "tool_call_id": tool_call.id, "content": fn_res}
+        resp["tool_call_id"] = tool_call.id
+    return resp
+
+
+def format_assistant_message(choice: Choice) -> dict:
+    resp = choice.message.to_dict(exclude_none=True)
+    if resp.get("content") is None:
+        resp["content"] = ""
     return resp
 
 
@@ -218,9 +225,8 @@ def main():
                     tools=functions,
                     tool_choice="auto",
                 ).choices[0]
-
                 # Add AI response/function call requests to context
-                messages.append(json.loads(choice.message.model_dump_json()))
+                messages.append(format_assistant_message(choice))
                 # If there are no function calls, this will break the loop after this conversation turn
                 if choice.finish_reason != "tool_calls":
                     print(choice.message.content)
