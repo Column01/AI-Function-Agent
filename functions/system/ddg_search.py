@@ -26,7 +26,7 @@ function_spec = {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "The search query to look for"},
-                "results": {"type": "int", "description": "The number of (max) results to get, defaults to 3 results"}
+                "results": {"type": "number", "description": "The number of (max) results to get, defaults to 3 results"}
             },
             "required": ["query"],
         },

@@ -1,7 +1,9 @@
 # AI Function Agent (WIP!)
 
-- Chat with your own local or remote AI assistant that can run custom python functions implicitly
-- Build an AI mediated automation ecosystem tailored to your workload
+A simple script using OpenAI's Python library to connect to an LLM inference backend for AI-Controlled python function calling
+
+- Chat with your own locally or remotely hosted AI assistant that can run python code implicitly
+- Build AI mediated automation ecosystems tailored to your workload
 - Generate images using the included image generation tool and the [Lumina-Image-2.0](https://huggingface.co/Alpha-VLLM/Lumina-Image-2.0) model!
 
 ## Important Note
@@ -33,6 +35,7 @@ A larger model with better overall capabilities is preferred as you will get a b
     - Once created, it can be activated with:
         - `./aiAgentVenv/Scripts/activate`
     - If you want to run the main LLM locally, we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
+        - Be sure to enable `--jinja` if you use this backend to enable the tool calling
 
 
 ### Modules
@@ -40,8 +43,8 @@ A larger model with better overall capabilities is preferred as you will get a b
 Installing modules in the correct order helps make sure everything installs with proper support for acceleration when applicable.
 
 1. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
-2. `pip install duckduckgo-search qwen-agent transformers usearch`
-3. `pip install git+https://github.com/zhuole1025/diffusers.git@lumina2` (fork of diffusers with new lumina2 image pipeline)
+2. `pip install duckduckgo-search openai transformers usearch`
+3. `pip install git+https://github.com/huggingface/diffusers` (install from source for lumina2 support)
 
 ## Usage
 
@@ -74,27 +77,27 @@ Custom tools can be created by placing a new function script in the `functions/u
 Below is a template you can use, the `function` variable must point to the function the LLM should use. The `function_spec` variable MUST follow the [OpenAI tool/function format](https://platform.openai.com/docs/guides/function-calling) and is required for your function to be loaded and registered as usable with the model.
 
 ```py
-def say_hello(name: str) -> str:
-    print(f"Hello, {name}!")
-    return f"Hello, {name}!"
+def print_message(message: str = None) -> str:
+    if message:
+        print(message)
+        return message
 
 
-function = say_hello
+function = print_message
 function_spec = {
     "type": "function",
     "function": {
-        "name": "say_hello",
-        "description": "Says hello to someone, the returned value is the message that was sent.",
+        "name": "print_message",
+        "description": "Print's a message into the dev console. Only use when requested to use.",
         "parameters": {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "The person's name"}
+                "message": {"type": "string", "description": "A message to print"}
             },
-            "required": ["name"],
+            "required": ["message"],
         },
     },
 }
-
 ```
 
 ## Examples

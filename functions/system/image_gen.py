@@ -42,7 +42,7 @@ def gen_image(prompt: str, width: int = 512, height: int = 512, open: bool = Tru
         height=height,
         width=width,
         guidance_scale=4.0,
-        num_inference_steps=30,
+        num_inference_steps=50,
         cfg_trunc_ratio=0.25,
         cfg_normalization=True,
         generator=torch.Generator().manual_seed(seed),
@@ -72,11 +72,11 @@ function_spec = {
                     "description": "The user's prompt for the image generation model",
                 },
                 "width": {
-                    "type": "int",
+                    "type": "number",
                     "description": "The user defined width of the image (or 512 if not specified)",
                 },
                 "height": {
-                    "type": "int",
+                    "type": "number",
                     "description": "The user defined height of the image (or 512 if not specified)",
                 }
             },
