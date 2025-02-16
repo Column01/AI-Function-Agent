@@ -4,17 +4,23 @@ import json
 import os
 from datetime import datetime
 from importlib import util
-from typing import Callable, Tuple, List, Dict
+from typing import Callable
 
-from qwen_agent.llm import get_chat_model
+from openai import OpenAI
+from openai.types.chat.chat_completion import Choice
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+)
+
+# Load the user's config file
+with open("config.json", "r") as fp:
+    config = json.load(fp)
+
+# Set up OpenAI API client
+client = OpenAI(base_url=config.get("api_url"), api_key=config.get("api_key"))
 
 
-def confirm_input(prompt: str = "Confirm? (y/n): ") -> bool:
-    test = input(prompt)
-    return test.lower() == "y"
-
-
-def glob_import(glob_str: str) -> Tuple[List[dict], Dict]:
+def glob_import(glob_str: str) -> tuple[list[dict], dict]:
     function_spec: list = []
     functions: dict = {}
     gui_file_paths = glob.glob(glob_str)
@@ -47,38 +53,25 @@ def load_user_funcs():
     global system_function_library, function_library, functions
     print("Loading user functions...")
     user_function_library, USER_TOOLS = glob_import("functions/user/*.py")
-    # For Qwen-Agent library, extracts actual functions from the tools dicts
-    user_functions = [tool["function"] for tool in USER_TOOLS]
     function_library = system_function_library | user_function_library
-    functions.extend(user_functions)
+    functions.extend(USER_TOOLS)
     print("User functions loaded!")
 
-
-# Load the user's config file
-with open("config.json", "r") as fp:
-    config = json.load(fp)
 
 # Import all system functions
 system_function_library, TOOLS = glob_import("functions/system/*.py")
 function_library = system_function_library
 
-# For Qwen-Agent library, extracts actual functions from the tools dicts
-functions = [tool["function"] for tool in TOOLS]
+functions = []
+functions.extend(TOOLS)
 
 if config.get("load_user_funcs"):
     load_user_funcs()
 
 
-def print_assistant_messages(responses: list):
-    printable = [
-        resp["content"]
-        for resp in responses
-        if resp["role"] == "assistant" and resp["content"] != ""
-    ]
-    print("\n".join(printable))
-
-
-def is_valid_func_call(fn_name: str, fn_args: dict) -> bool:
+def is_valid_tool_call(tool_call: ChatCompletionMessageToolCall) -> bool:
+    fn_name = tool_call.function.name
+    fn_args = json.loads(tool_call.function.arguments)
     # Checks if the function exists
     fnc = get_actual_function(fn_name)
     if not fnc:
@@ -106,54 +99,51 @@ def is_valid_func_call(fn_name: str, fn_args: dict) -> bool:
     return True
 
 
-def print_func_calls(responses: list):
+def print_func_calls(choice: Choice):
     print("\nFunctions to call (invalid functions will be ignored!): ")
-
-    for response in responses:
-        fn_call = response.get("function_call", None)
-        if fn_call:
-            name = fn_call["name"]
-            args = json.loads(fn_call["arguments"])
-            print(f"\n{name}")
-            print(f"    Args: {args}")
-            print(f"    Valid: {("Y" if is_valid_func_call(name, args) else "N")}")
-    print("\n")
+    tool_calls = choice.message.tool_calls
+    for tool_call in tool_calls:
+        print(f"\n{tool_call.function.name}")
+        print(f"    Args: {tool_call.function.arguments}")
+        print(f"    Valid: {('Y' if is_valid_tool_call(tool_call) else 'N')}")
+        print("\n")
 
 
-def has_func_calls(responses: list) -> bool:
-    calls = [response for response in responses if response.get("function_call")]
-    return len(calls) > 0
+def format_tool_message(tool_call: ChatCompletionMessageToolCall, fn_res: str) -> dict:
+    resp = {"role": "tool", "name": tool_call.function.name, "content": fn_res}
+    # Handle OpenAI tool calls
+    if tool_call.id:
+        resp = {"role": "tool", "tool_call_id": tool_call.id, "content": fn_res}
+    return resp
+
+
+def has_func_calls(choice: Choice) -> bool:
+    return choice.finish_reason == "tool_calls"
 
 
 def get_actual_function(func_name: str) -> Callable | None:
     return function_library.get(func_name)
 
 
-def execute_functions(responses: list) -> list:
-    messages = []
+def execute_functions(choice: Choice) -> list:
+    tool_call_messages = []
+    tool_calls = choice.message.tool_calls
     print("Executing functions...\n")
-    for response in responses:
-        fn_call = response.get("function_call", None)
-        if fn_call:
-            fn_name = fn_call["name"]
-            fn_args = json.loads(fn_call["arguments"])
-            fnc = get_actual_function(fn_name)
-            if fnc:
-                if is_valid_func_call(fn_name, fn_args):
-                    fn_res = fnc(**fn_args)
-                    if fn_res:
-                        messages.append(
-                            {"role": "function", "name": fn_name, "content": fn_res}
-                        )
-                else:
-                    messages.append(
-                        {
-                            "role": "function",
-                            "name": fn_name,
-                            "content": "This function either does not exist, or the parameters provided were invalid.",
-                        }
+    for tool_call in tool_calls:
+        fnc = get_actual_function(tool_call.function.name)
+        if fnc:
+            if is_valid_tool_call(tool_call):
+                fn_args = json.loads(tool_call.function.arguments)
+                fn_res = fnc(**fn_args)
+                tool_call_messages.append(format_tool_message(tool_call, fn_res))
+            else:
+                tool_call_messages.append(
+                    format_tool_message(
+                        tool_call,
+                        "This function either does not exist, or the parameters provided were invalid.",
                     )
-    return messages
+                )
+    return tool_call_messages
 
 
 def print_help():
@@ -170,21 +160,15 @@ def print_help():
 
 
 def main():
-    llm = get_chat_model(
-        {
-            "model": config["model_name"],
-            "model_server": config["api_url"],
-            "api_key": config["api_key"],
-        }
-    )
-
-    system_prompt = inspect.cleandoc(f"""
+    system_prompt = inspect.cleandoc(
+        f"""
                     You are JARVIS, a helpful and witty assistant. 
                     You help a user with their tasks by using any of the functions available to you and your replies should always aim to be short but informative.
                     When a user refers to themselves in a prompt to create or recall a memory in the first person, change it to refer to 'The User'.
                     If you cannot answer a prompt based on information you have available, use your tools to find more information.
                     The current date is {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}
-                    """)
+                    """
+    )
 
     system_message = {
         "role": "system",
@@ -228,28 +212,28 @@ def main():
             finished = False
             while not finished:
                 # Do initial inference to let the AI select function calls
-                for responses in llm.chat(
+                choice = client.chat.completions.create(
+                    model=config["model_name"],
                     messages=messages,
-                    functions=functions,
-                    extra_generate_cfg=dict(parallel_function_calls=True),
-                ):
-                    pass
+                    tools=functions,
+                    tool_choice="auto",
+                ).choices[0]
 
                 # Add AI response/function call requests to context
-                messages.extend(responses)
-                print_assistant_messages(responses)
+                messages.append(json.loads(choice.message.model_dump_json()))
                 # If there are no function calls, this will break the loop after this conversation turn
-                if not has_func_calls(responses):
+                if choice.finish_reason != "tool_calls":
+                    print(choice.message.content)
                     finished = True
-                else:
-                    # Print all function calls the model is requesting
-                    print_func_calls(responses)
-                    # Execute functions and add their responses to the context
-                    func_responses = execute_functions(responses)
-                    messages.extend(func_responses)
+                    continue
+                # Print all function calls the model is requesting
+                print_func_calls(choice)
+                # Execute functions and add their responses to the context
+                func_responses = execute_functions(choice)
+                messages.extend(func_responses)
 
         except KeyboardInterrupt:
-            # print(json.dumps(messages, indent=2))
+            print(json.dumps(messages, indent=2))
             exit("Exiting...")
 
 

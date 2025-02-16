@@ -208,7 +208,7 @@ function_spec = [
                         "description": "A query to search the memory for",
                     },
                     "n_docs": {
-                        "type": "int",
+                        "type": "number",
                         "description": "An optional amount for the number of memories to retrieve, defaults to 1",
                     },
                 },
