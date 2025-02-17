@@ -258,7 +258,6 @@ def main():
                 # Execute functions and add their responses to the context
                 func_responses = execute_functions(choice)
                 messages.extend(func_responses)
-                print(json.dumps(func_responses, indent=2))
 
         except (KeyboardInterrupt, Exception) as e:
             print(e)
