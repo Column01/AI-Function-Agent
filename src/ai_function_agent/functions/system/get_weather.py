@@ -2,10 +2,12 @@ import requests
 import json
 
 
-def get_weather(latitude: str, longitude: str):
+def get_weather(latitude: str, longitude: str) -> dict:
     response = requests.get(f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code")
     data = response.json()
-    return json.dumps(data['current'])
+    current = data["current"]
+    pairs = [f"{k}: {v}" for k, v in current.items()]
+    return "\n".join(pairs)
 
 
 function = get_weather

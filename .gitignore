@@ -3,3 +3,5 @@ __pycache__
 memory
 images
 config.json
+src/ai_function_agent.egg-info
+build

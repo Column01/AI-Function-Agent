@@ -30,21 +30,24 @@ A larger model with better overall capabilities is preferred as you will get a b
 - Install Python 3.11+
 - The code expects a model run by a OpenAI API compatable server
 - **Other Recommendations:**
-    - Create a python virtual environment (on linux, use `python3`):
-        - `python -m venv aiAgentVenv`
-    - Once created, it can be activated with:
-        - `./aiAgentVenv/Scripts/activate`
-    - If you want to run the main LLM locally, we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
-        - Be sure to enable `--jinja` if you use this backend to enable the tool calling
+    - If you want to run the main LLM locally, we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). **Be sure to enable `--jinja` if you use this backend to enable the tool calling**
 
 
-### Modules
+### Installation
 
 Installing modules in the correct order helps make sure everything installs with proper support for acceleration when applicable.
 
-1. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
-2. `pip install duckduckgo-search openai transformers usearch`
-3. `pip install git+https://github.com/huggingface/diffusers` (install from source for lumina2 support)
+1. Clone the repository:
+    - `git clone https://github.com/Column01/AI-Function-Agent.git`
+2. Create a python virtual environment (on linux, use `python3`):
+    - `python -m venv aiAgentVenv`
+3. Activate that virtual environment\
+    - `./aiAgentVenv/Scripts/activate`
+4. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
+5. Install the AI Function Agent package (this repo)
+    - `pip install -e .`
+6. Install diffusers from source (for lumina2 support) 
+    - `pip install git+https://github.com/huggingface/diffusers`
 
 ## Usage
 
@@ -54,9 +57,9 @@ In order to configure the script, you will need to run it the first time to gene
 
 You can run the script with the following command (assuming you activated the venv first!)
 
-`python tool_calling.py`
+`ai-function-agent`
 
-After it has been run, you can close it to edit the newly created config file (see [Backend Configuration](#backend-configuration)). If you are using llama.cpp as the backend, it is already configured to connect to a model running on the local machine and it will ask for a prompt. Be descriptive for what you want the model to do so it knows which tools to select, and what to do with any data it gets from the tools.
+After it has been run the new location of the config file shoudl have been printed to your console. After you have that copied, you can type `exit` close the prompt so we can edit the newly created config file (see [Backend Configuration](#backend-configuration) for instructions on how to do that). If you are using `llama.cpp` server we recommend for local use as the backend, it is already configured to connect to a model running on the local machine and it will ask for a prompt. Be descriptive for what you want the model to do so it knows which tools to select, and what to do with any data it gets from the tools.
 
 You can also use this for normal LLM chatting if you'd like.
 
@@ -64,9 +67,11 @@ There are a few commands you can use in the prompt, type `help` to list them all
 
 ### Backend Configuration
 
-You'll need to open and edit the newly created `config.json` file locally to have the correct URL and API key for your tool calling model. This can be a locally hosted model, or a remote model so long as the backend uses an OpenAI API compatable server.
+You'll need to open and edit the newly created `config.json` file. To locate this file, the program should have printed out the location to your console on the first run. If you closed the terminal without saving that path (and followed the install guide properly) the config should be located here: `src/ai_function_agent/config.json` (assuming you are at the project root).
 
-As stated above, for local use we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). Be sure to enable the `--jinja` flag
+Once located, you need to open it and edit the fields to have the correct URL and API key for your tool calling model. This can be a locally hosted model, or a remote model so long as the backend uses an OpenAI API compatable server.
+
+As stated above, for locally hosting a model use we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). Be sure to enable the `--jinja` flag for tool calling support!
 
 ### Available tools
 
