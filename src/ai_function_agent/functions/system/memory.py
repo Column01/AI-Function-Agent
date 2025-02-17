@@ -8,6 +8,8 @@ import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 from usearch.index import Index
 
+from ai_function_agent.tool_calling import join_path
+
 
 def mean_norm_pooling(model_output, attention_mask):
     token_embeddings = model_output[0]
@@ -46,19 +48,19 @@ def offload():
         onloaded = False
 
 
-if not os.path.exists("memory"):
-    os.mkdir("memory")
-    os.mkdir("memory/index")
+if not os.path.exists(join_path("memory")):
+    os.mkdir(join_path("memory"))
+    os.mkdir(join_path("memory/index"))
 
 metadata = {}
 index = Index(ndim=768)
 i = 0
-if os.path.isfile("memory/index.usearch"):
-    index.load("memory/index.usearch")
+if os.path.isfile(join_path("memory/index.usearch")):
+    index.load(join_path("memory/index.usearch"))
     i = len(index)
 
-if os.path.isfile("memory/metadata.json"):
-    with open("memory/metadata.json", "r") as fp:
+if os.path.isfile(join_path("memory/metadata.json")):
+    with open(join_path("memory/metadata.json"), "r") as fp:
         metadata = json.load(fp)
 
 
@@ -93,8 +95,8 @@ def index_file(path, auto_save=True, onload_model=True) -> str:
         i += 1
 
     if auto_save:
-        index.save("memory/index.usearch")
-        with open("memory/metadata.json", "w") as fp:
+        index.save(join_path("memory/index.usearch"))
+        with open(join_path("memory/metadata.json"), "w") as fp:
             json.dump(metadata, fp, indent=4)
 
     # if onload_model:
@@ -111,12 +113,12 @@ def index_memory():
     and adds the embeddings to the index. After processing all files, it saves the index to a file named 'memory/index.usearch'.
     """
     onload()
-    for file_path in glob.glob("memory/*.txt"):
+    for file_path in glob.glob(join_path("memory/*.txt")):
         print(f"Processing file: {file_path}")
         index_file(file_path, auto_save=False, onload_model=False)
 
-    index.save("memory/index.usearch")
-    with open("memory/metadata.json", "w") as fp:
+    index.save(join_path("memory/index.usearch"))
+    with open(join_path("memory/metadata.json", "w")) as fp:
         json.dump(metadata, fp, indent=4)
     offload()
 
@@ -157,7 +159,7 @@ def recall_memory(query: str, n_docs: int = 1) -> str:
             for match in _matches:
                 path = metadata.get(str(match.key))
                 if path:
-                    with open(path, "r") as fp:
+                    with open(join_path(path), "r") as fp:
                         file_data = fp.read()
                         documents.append(file_data)
         return json.dumps(documents, indent=2)
@@ -165,7 +167,7 @@ def recall_memory(query: str, n_docs: int = 1) -> str:
 
 def create_memory(memory_text: str) -> str:
     # Create a new text file in the '/memory' subdirectory with the memory_text
-    file_path = os.path.join("memory", f"memory_{int(time.time())}.txt")
+    file_path = os.path.join(join_path("memory"), f"memory_{int(time.time())}.txt")
     print(f"Creating new memory...")
     with open(file_path, "w") as fp:
         fp.write(memory_text)

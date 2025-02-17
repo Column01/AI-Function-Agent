@@ -6,6 +6,8 @@ import numpy as np
 import torch
 from diffusers import Lumina2Text2ImgPipeline
 
+from ai_function_agent.tool_calling import join_path
+
 
 # Where to load the model
 if torch.cuda.is_available():
@@ -30,7 +32,7 @@ def gen_image(prompt: str, width: int = 512, height: int = 512, open: bool = Tru
     # Optimizations
     pipe.enable_vae_slicing()
     pipe.enable_vae_tiling()
-    #pipe.enable_model_cpu_offload()
+    pipe.enable_model_cpu_offload()
 
     # Randomize the seed
     MAX_SEED = np.iinfo(np.int32).max
@@ -48,8 +50,8 @@ def gen_image(prompt: str, width: int = 512, height: int = 512, open: bool = Tru
         generator=torch.Generator().manual_seed(seed),
     ).images[0]
 
-    os.makedirs("images", exist_ok=True)
-    f_name = f"images/image_{int(time.time())}.png"
+    os.makedirs(join_path("images"), exist_ok=True)
+    f_name = join_path(f"images/image_{int(time.time())}.png")
 
     image.save(f_name)
 
