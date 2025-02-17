@@ -1,7 +1,0 @@
-
-{
-    "model_name": "Qwen",
-    "api_url": "http://localhost:8080/v1",
-    "api_key": "EMPTY",
-    "load_user_funcs": false
-}

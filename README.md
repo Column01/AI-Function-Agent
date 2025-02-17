@@ -48,27 +48,29 @@ Installing modules in the correct order helps make sure everything installs with
 
 ## Usage
 
-### Backend Configuration
-
-You'll need to open and edit the [config.json](/config.json) file locally to have the correct URL and API key for your tool calling model. This can be a locally hosted model, or a remote model so long as the backend uses an OpenAI API compatable server.
-
-As stated above, for local use we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md).
-
 ### Running the Script
 
-Run the script to prompt the model for function calling (assuming you activated the venv!)
+In order to configure the script, you will need to run it the first time to generate a `config.json` file for you.
+
+You can run the script with the following command (assuming you activated the venv first!)
 
 `python tool_calling.py`
 
-After it has been run, it will ask for a prompt. Be descriptive for what you want the model to do so it knows which tools to select, and what to do with any data it gets from the tools.
+After it has been run, you can close it to edit the newly created config file (see [Backend Configuration](#backend-configuration)). If you are using llama.cpp as the backend, it is already configured to connect to a model running on the local machine and it will ask for a prompt. Be descriptive for what you want the model to do so it knows which tools to select, and what to do with any data it gets from the tools.
 
 You can also use this for normal LLM chatting if you'd like.
 
 There are a few commands you can use in the prompt, type `help` to list them all.
 
+### Backend Configuration
+
+You'll need to open and edit the newly created `config.json` file locally to have the correct URL and API key for your tool calling model. This can be a locally hosted model, or a remote model so long as the backend uses an OpenAI API compatable server.
+
+As stated above, for local use we recommend using [llama.cpp](https://github.com/ggerganov/llama.cpp/releases)'s OpenAI API [compatable server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md). Be sure to enable the `--jinja` flag
+
 ### Available tools
 
-Pre-made tools exist and can be found in the [functions](/functions) folder of the repo.
+Pre-made tools can be found in the [functions](/functions) folder of the repo.
 
 ### Making your own tooling
 
@@ -99,6 +101,14 @@ function_spec = {
     },
 }
 ```
+
+## Other Notes
+
+### Good Model hosts
+
+A good model host to get your foot in the door is [Groq.com](https://groq.com/). I've been testing out their free tier for development purposes and their rate limits/daily limits are really generous, and the model selection they have is great! You could also make functions for this tool to use their other models for tasks. They offer pay per token pricing, that information is available [on their website](https://groq.com/pricing/).
+For example, the `qwen2.5-32b` model has no daily limit on tokens per day. Instead they opted to limit the number of requests per minute, tokens per minute, and another limit on requests per day (which does effectively limit you to a certain number of tokens max, but it is still generous enough to allow normal use).
+You can get an API key by signing in with a Google account so no need for making a new account, and as mentioned before they have a free tier that is relatively generous
 
 ## Examples
 

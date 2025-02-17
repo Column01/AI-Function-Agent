@@ -12,9 +12,21 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
 
-# Load the user's config file
-with open("config.json", "r") as fp:
-    config = json.load(fp)
+
+if not os.path.exists("config.json"):
+    # User's config file doesn't exist, create one
+    with open("config.json", "w") as fp:
+        config = {
+            "model_name": "Qwen",
+            "api_url": "http://localhost:8080/v1",
+            "api_key": "EMPTY",
+            "load_user_funcs": False
+        }
+        json.dump(config, fp, indent=4)
+else:
+    # Load the user's config file
+    with open("config.json", "r") as fp:
+        config = json.load(fp)
 
 # Set up OpenAI API client
 client = OpenAI(base_url=config.get("api_url"), api_key=config.get("api_key"))
