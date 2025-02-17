@@ -124,10 +124,6 @@ def format_assistant_message(choice: Choice) -> dict:
     return resp
 
 
-def has_func_calls(choice: Choice) -> bool:
-    return choice.finish_reason == "tool_calls"
-
-
 def get_actual_function(func_name: str) -> Callable | None:
     return function_library.get(func_name)
 
