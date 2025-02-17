@@ -121,6 +121,8 @@ def format_assistant_message(choice: Choice) -> dict:
     resp = choice.message.to_dict(exclude_none=True)
     if resp.get("content") is None:
         resp["content"] = ""
+    # Ensure that the 'reasoning' field is not included for assistant messages
+    resp.pop("reasoning", None)
     return resp
 
 
