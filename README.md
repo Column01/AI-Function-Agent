@@ -37,17 +37,31 @@ A larger model with better overall capabilities is preferred as you will get a b
 
 Installing modules in the correct order helps make sure everything installs with proper support for acceleration when applicable.
 
+[Windows]
 1. Clone the repository:
     - `git clone https://github.com/Column01/AI-Function-Agent.git`
-2. Create a python virtual environment (on linux, use `python3`):
+2. Create a python virtual environment (on linux, use `python3 -m venv aiAgentVenv`):
     - `python -m venv aiAgentVenv`
-3. Activate that virtual environment\
+3. Activate that virtual environment\ (on linux, use `source aiAgentVenv/bin/activate`):
     - `./aiAgentVenv/Scripts/activate`
 4. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
-5. Install the AI Function Agent package (this repo)
+5. Install the AI Function Agent package (on linux, use `pip3 install -e AI-Function-Agent`):
     - `pip install -e .`
-6. Install diffusers from source (for lumina2 support) 
+6. Install diffusers from source for lumina2 support (on linux, use `pip3 install git+https://github.com/huggingface/diffusers`):
     - `pip install git+https://github.com/huggingface/diffusers`
+  
+[Ubuntu]
+1. Clone the repository:
+    - `git clone https://github.com/Column01/AI-Function-Agent.git`
+2. Create a python virtual environment:
+    - `python3 -m venv aiAgentVenv`
+3. Activate that virtual environment\
+    - `source aiAgentVenv/bin/activate`
+4. [Install torch, torchvision, and torchaudio](https://pytorch.org/get-started/locally/) with CUDA/ROCM if possible
+5. Install the AI Function Agent package (this repo)
+    - `pip3 install -e AI-Function-Agent`
+6. Install diffusers from source (for lumina2 support) 
+    - `pip3 install git+https://github.com/huggingface/diffusers`
 
 ## Usage
 
