@@ -250,7 +250,8 @@ def main():
                 messages.append(assistant_messages)
                 # If there are no function calls, this will break the loop after this conversation turn
                 if choice.finish_reason != "tool_calls":
-                    print(choice.message.content)
+                    if choice.message.content:
+                        print(choice.message.content)
                     finished = True
                     continue
                 # Print all function calls the model is requesting
