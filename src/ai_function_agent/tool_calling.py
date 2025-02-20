@@ -21,7 +21,7 @@ config_path = join_path("config.json")
 
 if not os.path.exists(config_path):
     # User's config file doesn't exist, create one
-    with open(config_path) as fp:
+    with open(config_path, "w") as fp:
         config = {
             "model_name": "Qwen",
             "api_url": "http://localhost:8080/v1",
