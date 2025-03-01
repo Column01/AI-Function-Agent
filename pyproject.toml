@@ -16,10 +16,13 @@ classifiers = [
 ]
 dependencies = [
     "duckduckgo-search",
+    "fastapi",
     "openai",
     "transformers",
     "usearch",
+    "uvicorn",
 ]
 
 [project.scripts]
 ai-function-agent = "ai_function_agent.tool_calling:main"
+ai-webserver = "ai_function_agent.server:start"
