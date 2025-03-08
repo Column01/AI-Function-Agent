@@ -5,3 +5,4 @@ images
 config.json
 src/ai_function_agent.egg-info
 build
+conversations

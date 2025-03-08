@@ -126,12 +126,19 @@ def format_tool_message(tool_call: ChatCompletionMessageToolCall, fn_res: str) -
     return resp
 
 
-def format_assistant_message(choice: Choice) -> dict:
+def format_assistant_message(choice: Choice) -> tuple[dict, str]:
     resp = choice.message.to_dict(exclude_none=True)
     if resp.get("content") is None:
         resp["content"] = ""
-    resp.pop("reasoning", None)
-    return resp
+
+    content = resp["content"]
+    # Patch for QwQ and some other reasoning model's bugs
+    if "</think>" in content and not content.startswith("<think>"):
+        print("REPAIRING REASONING TAGS ON BROKEN CONTENT")
+        resp["content"] = "<think>\n" + content
+    reasoning = resp.pop("reasoning", None)
+    reasoning = f"<think>\n{reasoning}</think>\n\n" if reasoning else ""
+    return resp, reasoning
 
 
 def execute_functions(choice: Choice) -> list:
@@ -165,7 +172,10 @@ def load_conversation(conversation_id: str) -> list:
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Conversation not found")
     with open(file_path, "r") as f:
-        return json.load(f)
+        messages = json.load(f)
+        for message in messages:
+            message.pop("reasoning", "")
+        return messages
 
 
 def save_conversation(conversation_id: str, messages: list):
@@ -177,6 +187,7 @@ def save_conversation(conversation_id: str, messages: list):
 # FastAPI endpoints
 @app.post("/prompt")
 async def send_prompt(prompt: str, conversation_id: Optional[str] = None):
+    """Creates or continues a conversation thread. To create a thread, do not include a conversation_id. To continue one, include the conversation_id returned after your first message"""
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
 
@@ -189,41 +200,49 @@ async def send_prompt(prompt: str, conversation_id: Optional[str] = None):
 
     # Append user's prompt
     messages.append({"role": "user", "content": prompt})
-    initial_length = len(messages)
-
+    new_messages = []
     # Process AI response and tool calls
     finished = False
     while not finished:
-        choices = client.chat.completions.create(
-            model=config["model_name"],
-            messages=messages,
-            tools=functions,
-            tool_choice="auto",
-        ).choices
+        try:
+            choices = client.chat.completions.create(
+                model=config["model_name"],
+                messages=messages,
+                tools=functions,
+                tool_choice="auto",
+            ).choices
+        except Exception as e:
+            print(e)
+            print(messages)
+            raise e
         choice = choices[0]
-        assistant_messages = format_assistant_message(choice)
-        messages.append(assistant_messages)
+        assistant_message, reasoning = format_assistant_message(choice)
+        messages.append(assistant_message)
+        # Re-attach the reasoning field (removed for inference step) for the API response
+        copied_assistant_message = assistant_message.copy()
+        copied_assistant_message["reasoning"] = reasoning
+        new_messages.append(copied_assistant_message)
+
         if choice.finish_reason != "tool_calls":
             finished = True
             continue
         func_responses = execute_functions(choice)
         messages.extend(func_responses)
+        new_messages.extend(func_responses)
 
-    # Save updated conversation
+    # Save updated conversation (without reasoning included)
     save_conversation(conversation_id, messages)
 
-    # Return only new messages
-    new_messages = messages[initial_length:]
     return {"conversation_id": conversation_id, "new_messages": new_messages}
 
 
 @app.get("/conversation/{conversation_id}")
 async def get_conversation(conversation_id: str):
+    """Retrieves a conversation in its entirety from the local conversation history"""
     messages = load_conversation(conversation_id)
     return {"conversation_id": conversation_id, "messages": messages}
 
 
-# New function to start Uvicorn server
 def start():
     web_server_config = config.get("web_server", {})
     host = web_server_config.get("host", "127.0.0.1")
